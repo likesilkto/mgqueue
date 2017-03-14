@@ -12,7 +12,7 @@ setup(
 	author= 'Masayuki Tanaka', # Author name
 	author_email= 'm@like.silk.to', # Author mail	
 
-	include_package_data=True, # Include additional files into the package
+	include_package_data=False, # Include additional files into the package
 	url='https://github.com/likesilkto/mgqueue', # Details
 	description='Simple task queue.', # short description
 	long_description=open('README.md').read(), # long description
