@@ -5,7 +5,7 @@ import sys
 import subprocess
 import argparse
 
-import mgqueue
+from mgqueue import mgqueue
 
 ########################################################
 def trans_env( src ):

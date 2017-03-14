@@ -21,8 +21,8 @@ except:
 
 ########################################################
 # global variables
-title = 'mgq'
-version = '0.4.0'
+title = 'mgqueue'
+version = '0.1.0'
 root = os.path.expanduser('~') + '/' # $HOME/
 queue_dir = root + '.' + title + '/'
 
