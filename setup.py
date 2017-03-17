@@ -23,6 +23,8 @@ setup(
    	packages=find_packages(),
 	scripts=['scripts/mgq'],
 
+	test_suite = 'tests',
+
 	classifiers=[
 		'Programming Language :: Python :: 3.6',
 		'License :: OSI Approved :: MIT',
