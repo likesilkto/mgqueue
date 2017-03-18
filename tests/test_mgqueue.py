@@ -4,11 +4,12 @@
 import unittest
 
 import os
-
 import shutil
+import time
 
 import sys
 sys.path.append('../mgqueue')
+
 
 from mgqueue import mgqueue
 
@@ -34,6 +35,8 @@ class test_mgqueue( unittest.TestCase ):
 		self.assertTrue(os.access( test_queue_dir, os.X_OK) )
 
 	def tearDown(self): # it is called after each test
+		self.mgQueue.clear_file()
+		self.assertFalse( os.access( self.mgQueue.pkl_file, os.F_OK ) )
 		pass
 
 ###################################################################
@@ -76,7 +79,7 @@ class test_mgqueue( unittest.TestCase ):
 	def test_is_run(self):# is_run
 		self.assertFalse( self.mgQueue.is_run() )
 
-	def test_task(self): # add_cmd, up_ind, down_ind
+	def test_task(self): # add_cmd, up_ind, down_ind, move_ind, remove_ind, remove_all
 		cwd = os.getcwd() + '/'
 		test_queue = []
 		test_queue.append( 
@@ -107,14 +110,22 @@ class test_mgqueue( unittest.TestCase ):
 
 		task, newid, msg = self.mgQueue.up_ind( 1, 1 );
 		self.assertEqual( newid, 0 )
+		
+		self.mgQueue.remove_ind( 1 );
+		queue = self.mgQueue.load_queue()
+		self.assertEqual( len(queue), 2 )
 
-##
+		self.mgQueue.remove_all();
+		queue = self.mgQueue.load_queue()
+		self.assertEqual( len(queue), 0 )
+		
+		
 
+###################################################################
 	def suite():
 		suite = unittest.TestSuite()
 		suite.addTests(unittest.makeSuite(test_mgqueue))
 		return suite
   
 if( __name__ == '__main__' ):
-	print( os.getcwd() )
 	unittest.main()

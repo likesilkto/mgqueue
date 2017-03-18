@@ -200,7 +200,7 @@ class mgqueue(object):
 
 ########################################################
 ## -remove
-	def remove_ind( self, ind ):
+	def remove_ind( self, ind ): # test_task
 		
 		fd = self.lock()
 		
@@ -240,7 +240,7 @@ class mgqueue(object):
 
 ########################################################
 ## move
-	def move_ind( self, ind, newind ):
+	def move_ind( self, ind, newind ): #test_task
 		fd = self.lock()
 		queue = self.load_queue()
 
@@ -276,13 +276,13 @@ class mgqueue(object):
 
 ########################################################
 ## -down
-	def down_ind( self, ind, n ):
+	def down_ind( self, ind, n ): # test_task
 		task, newind, msg = self.move_ind( ind, ind+n )
 		return task, newind, 'task ' + str(ind) + ' is moved down to ' + str(newind)
 
 ########################################################
 ## -clear
-	def clear_file(self):
+	def clear_file(self): # tearDown
 		if( self.is_run() ):
 			msg =  'Cannot clear, because it is still running.'
 			raise ValueError(msg)
@@ -293,63 +293,6 @@ class mgqueue(object):
 		
 		msg = 'Cleared files for ' + self.queue_name
 		return msg
-
-########################################################
-## -check
-	def check_queue(self):
-		queue = self.load_queue()
-		nerr = 0
-		ind = 0
-		for task in queue:
-			print( str(ind) + ':' )
-			if( os.access( task['cwd'], os.X_OK ) ):
-				print( ' OK cwd: ' + task['cwd'] )
-			else:
-				print( '*NG*cwd: ' + task['cwd'] )
-				nerr = nerr + 1
-			
-			cmd = [ 'which', task['cmd'][0] ]
-			cwd = task['cwd']
-			try:
-				res = subprocess.run(args=cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, env=self.env )
-				realcmd = res.stdout.decode('utf8').rstrip()
-				print( ' OK cmd: ' + task['cmd'][0] + ' -> ' + realcmd )
-			except:
-				print( '*NG*cmd: ' + task['cmd'][0] )
-				nerr = nerr + 1
-				
-			stdout_file = task['stdout']
-			if( stdout_file[0] != '/' ):
-				stdout_file = cwd + stdout_file
-			try:
-				with open( stdout_file, 'w' ) as f:
-					pass
-				print( ' OK stdout: ' + task['stdout'] )
-			except:
-				print( '*NG*stdout: ' + task['stdout'] )
-				nerr = nerr + 1
-
-			stderr_file = task['stderr']
-			if( stderr_file[0] != '/' ):
-				stderr_file = cwd + stderr_file
-			try:
-				with open( stderr_file, 'w' ) as f:
-					pass
-				print( ' OK stderr: ' + task['stderr'] )
-			except:
-				print( '*NG*stderr: ' + task['stderr'] )
-				nerr = nerr + 1
-			
-			print()
-			
-			ind = ind + 1
-		
-		print()
-		if( nerr == 0 ):
-			print( 'Passed with no error' )
-		else:
-			print( '***** ERROR ****' )
-			print( str(nerr) + ' errors were found.' )
 
 ########################################################
 ## -start
