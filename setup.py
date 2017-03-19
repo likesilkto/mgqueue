@@ -12,15 +12,15 @@ setup(
 	author= 'Masayuki Tanaka', # Author name
 	author_email= 'm@like.silk.to', # Author mail	
 
-	include_package_data=False, # Include additional files into the package
 	url='https://github.com/likesilkto/mgqueue', # Details
 	description='Simple task queue.', # short description
-	long_description=open('README.md').read(), # long description
+	long_description='https://likesilkto.github.io/mgqueue', # long description
 	install_requires=[ # Dependent packages (distributions)
 		'Daemonize',
 	],
 	
-   	packages=find_packages(),
+	include_package_data=False, # Include additional files into the package
+	packages=find_packages(),
 	scripts=['scripts/mgq'],
 
 	test_suite = 'tests',

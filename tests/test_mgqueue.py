@@ -15,7 +15,7 @@ from mgqueue import mgqueue
 
 test_queue_dir = '__test_queue_dir__ '
 test_queue_name = '__test__'
-test_env_queue_name = '__test_env__'
+test_prefix_queue_name = '__test_prefix__'
 
 test_stdout = test_queue_dir + '/test.stdout'
 test_stderr = test_queue_dir + '/test.stdout'
@@ -47,29 +47,27 @@ class test_mgqueue( unittest.TestCase ):
 		self.mgQueue.unlock(fd)
 		self.assertFalse(os.access( self.mgQueue.lck_file, os.F_OK) )
 
-	def test_env(self): # has_env, save_env, load_env, del_pkl_file, del_pkl_file, add_cmd
-		self.assertFalse( self.mgQueue.has_env() )
+	def test_prefix(self): # has_prefix, save_prefix, load_prefix, del_pkl_file, del_pkl_file, add_cmd
+		self.assertFalse( self.mgQueue.has_prefix() )
 		
-		env = {}
-		env['TEST'] = 'test'
-		env['MGQ'] = 'mgq'
+		prefix = 'hoge=hage,'
 		
 		self.mgQueue.add_cmd( ['echo', 'test'] )
 		
 		try:
-			self.mgQueue.save_env( env )
+			self.mgQueue.save_prefix( prefix )
 			flg = True
 		except:
 			flg = False
 		self.assertFalse( flg )
 		
-		mgQueueEnv = mgqueue.mgqueue( test_env_queue_name, test_queue_dir )
-		mgQueueEnv.save_env( env )
+		mgQueuePrefix = mgqueue.mgqueue( test_prefix_queue_name, test_queue_dir )
+		mgQueuePrefix.save_prefix( prefix )
 		
-		self.assertEqual( mgQueueEnv.load_env(), env )
+		self.assertEqual( mgQueuePrefix.load_prefix(), prefix )
 		
-		mgQueueEnv.del_pkl_file()
-		self.assertTrue( os.access(mgQueueEnv.pkl_file, os.F_OK) )
+		mgQueuePrefix.del_pkl_file()
+		self.assertTrue( os.access(mgQueuePrefix.pkl_file, os.F_OK) )
 		
 		self.assertTrue( os.access(self.mgQueue.pkl_file, os.F_OK) )
 		self.mgQueue.del_pkl_file()

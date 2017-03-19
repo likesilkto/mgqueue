@@ -8,14 +8,6 @@ import argparse
 from mgqueue import mgqueue
 
 ########################################################
-def trans_env( src ):
-	dst = {}
-	for env in env_var.split(','):
-		key, val = env.split('=')
-		dst[key] = val
-
-
-########################################################
 # main
 if( len(sys.argv) == 1 ):
 	mgqueue.ls_queue()
@@ -42,23 +34,17 @@ parser_clear = subparser.add_parser('clear', help='remove reated files')
 parser_clear.set_defaults(func=clear)
 
 ########################################################
-## initialize env
-def env(mgQueue, args):
-	
-	env = {}
-	for ev in args.env_val:
-		key, val = ev.split('=')
-		env[key] = val
-
+## initialize prefix
+def prefix(mgQueue, args):
 	try:
-		msg = mgQueue.save_env( env )
+		msg = mgQueue.save_prefix( args.prefix_data[0] )
 	except ValueError as err:
 		print('***** ERROR *****')
 		msg = err
 	print(msg)
-parser_env = subparser.add_parser('env', help='initialize queue with env')
-parser_env.set_defaults(func=env)
-parser_env.add_argument('env_val', nargs='+', help='specify env: HOGE=hoge HAGE=hage')
+parser_prefix = subparser.add_parser('prefix', help='initialize queue with prefix')
+parser_prefix.set_defaults(func=prefix)
+parser_prefix.add_argument('prefix_data', nargs=1, help='specify prefix')
 
 ########################################################
 ## check queue
