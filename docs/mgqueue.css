@@ -54,4 +54,20 @@ color:#FF0066;
 text-decoration:none;
 }
 
+code {
+font-size: 1em;
+line-height: 1.2;
+padding: 5px;
+background: #EEEEEE;
+}
 
+pre {
+font-size: 1em;
+line-height: 1.2;
+padding: 5px;
+background: #EEEEEE;
+}
+
+p {
+padding: 5px;
+}

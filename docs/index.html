@@ -40,21 +40,58 @@
 </head>
 
 <div id="wrapper">
-	<div id="header">
-		<h1><a href=".">mgq (Minimal Gram task Queue)</a></h1>
-	</div>
-	<div id="main">
-		<div id="menu">
-			<p><a href=".">mgq</a></p>
-		</div>
-		<div id="contents">
-			
-		</div>
-	</div>
-	<div id="footer">
-	<hr>
+
+<div id="header">
+<h1><a href=".">mgq (Minimal Gram task Queue)</a></h1>
+</div>
+
+<div id="main">
+
+<div id="menu">
+<p><a href=".">mgq</a></p>
+</div>
+
+<div id="contents">
+<h2>Overview</h2>
+<p>The mgq (Minimal Gram Queue) manages background tasks.<br>
+When the current task is finished, the next task will be automatically started.</p>
+<h2>Functionalities</h2>
+<ul>
+<li>
+<p>Multi-queues</p>
+</li>
+<li>
+<p>Adding task</p>
+</li>
+<li>
+<p>Remove task</p>
+</li>
+<li>
+<p>Swith task</p>
+</li>
+</ul>
+<h2>Install</h2>
+<div class="highlight"><pre><span></span>% pip install git+https://github.com/likesilkto/mgqueue
+</pre></div>
+
+
+<p>If you use anyenv, restart shell.</p>
+<h2>Getting start</h2>
+<div class="highlight"><pre><span></span>% mgq test ad &#39;echo test&#39; -stdout test.log
+% mgq test -l
+% mgq test start
+% mgq test log
+% cat test.log
+</pre></div>
+</div>
+
+</div>
+
+<div id="footer">
+<hr>
 <p><a href="http://like.silk.to/">like silk</a> <img alt="" src="TnkBee025.png"></p>
-  </div>
+ </div>
+  
 </div>
 </body>
 </html>
