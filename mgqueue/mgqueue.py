@@ -43,9 +43,9 @@ def ls_queue(queue_dir = None):
 	pkl = glob.glob( queue_dir + '*.pkl' )
 	for file in pkl:
 		with open(file, 'rb') as fin:
-			queue, env = pickle.load( fin )
+			queue, prefix = pickle.load( fin )
 		queue_name = os.path.splitext(os.path.basename(file))[0] + ' '
-		if( env != None ):
+		if( prefix != None ):
 			queue_name = queue_name + '+'
 		if( queue_name in runs ):
 			queue_name = queue_name + '*'
@@ -58,16 +58,16 @@ class mgqueue(object):
 ########################################################
 ## directry setting
 	def __init__( self, queue_name, queue_dir = None ): #setUp
-		if( not os.access( queue_dir, os.F_OK ) ):
-			os.mkdir( queue_dir )
-
-		self.queue_name = queue_name
-		self.cwd = os.getcwd() + '/'
-		
 		if( queue_dir == None ):
 			self.queue_dir = defulat_queue_dir()
 		else:
 			self.queue_dir = queue_dir
+		
+		if( not os.access( self.queue_dir, os.F_OK ) ):
+			os.mkdir( self.queue_dir )
+
+		self.queue_name = queue_name
+		self.cwd = os.getcwd() + '/'
 		
 		if( self.queue_dir[-1] != '/' ):
 			self.queue_dir = self.queue_dir + '/'
@@ -77,7 +77,7 @@ class mgqueue(object):
 		self.pkl_file = self.queue_dir + queue_name + '.pkl'
 		self.lck_file = self.queue_dir + queue_name + '.lck'
 		
-		self.env = self.load_env()
+		self.prefix = self.load_prefix()
 		
 ########################################################
 ## class utilities
@@ -91,47 +91,45 @@ class mgqueue(object):
 		fd.close()
 		os.remove(self.lck_file)
 
-	def has_env(self): #test_env
-		return self.env != None
+	def has_prefix(self): #test_prefix
+		return self.prefix != None
 
 	def is_run(self): #test_is_run
 		return os.access( self.pid_file, os.F_OK )
 	
-	def _load_queue_env(self):
+	def _load_queue_prefix(self):
 		try:
 			with open(self.pkl_file, 'rb') as fin:
-				queue, env = pickle.load( fin )
+				queue, prefix = pickle.load( fin )
 		except:
 			queue = []
-			env = None
-		return queue, env
+			prefix = None
+		return queue, prefix
 
 	def load_queue(self): #test_task, 
-		queue, env = self._load_queue_env()
+		queue, prefix = self._load_queue_prefix()
 		return queue
 
-	def load_env(self): #test_env
-		queue, env = self._load_queue_env()
-		return env
+	def load_prefix(self): #test_env
+		queue, prefix = self._load_queue_prefix()
+		return prefix
 
 	def save_queue(self, queue):
 		with open(self.pkl_file, 'wb') as fout:
-			pickle.dump( [queue, self.env], fout )
+			pickle.dump( [queue, self.prefix], fout )
 	
-	def save_env(self, env): #test_env
+	def save_prefix(self, prefix): #test_prefix
 		if( os.access( self.pkl_file, os.F_OK ) ):
-			msg = 'Cannot save env for existing queue.'
+			msg = 'Cannot save prefix for existing queue.'
 			raise ValueError(msg)
 		
-		self.env = env
+		self.prefix = prefix
 		self.save_queue( [] )
-		msg = self.queue_name + ' is initialized with \n'
-		for k, v in self.env.items():
-			msg = msg + k + '=' + v + '\n'
+		msg = self.queue_name + ' is initialized with : ' + self.prefix
 		return msg
 
 	def del_pkl_file(self): #test_env
-		if( self.env == None ):
+		if( self.prefix == None ):
 			os.remove( self.pkl_file )
 
 
@@ -140,10 +138,8 @@ class mgqueue(object):
 	def ls_task(self):
 		queue = self.load_queue()
 		
-		if( self.has_env() ):
-			print( 'env: ' )
-			for k, v in self.env.items():
-				print(' ' + k + '=' + v )
+		if( self.has_prefix() ):
+			print( 'prefix: ' + self.prefix )
 		if( len(queue) > 0 ):
 			run_flg = ( self.queue_name in get_runs() )
 			for i in range(len(queue)):
@@ -189,7 +185,7 @@ class mgqueue(object):
 
 ########################################################
 ## -add
-	def add_cmd( self, cmd, stdout = '/dev/null', stderr = '/dev/null' ): # test_env, test_task
+	def add_cmd( self, cmd, stdout = '/dev/null', stderr = '/dev/null' ): # test_prefix, test_task
 		cwd = self.cwd
 		
 		task = { 'cmd':cmd, 'cwd':cwd, 'stdout':stdout, 'stderr':stderr }
@@ -236,7 +232,15 @@ class mgqueue(object):
 			self.unlock(fd)
 		
 		else:
-			os.remove(self.pkl_file)
+			fd = self.lock()
+			queue = self.load_queue()
+			
+			queue = []
+			
+			self.save_queue(queue)
+			self.unlock(fd)
+
+			self.del_pkl_file()
 
 ########################################################
 ## move
@@ -295,6 +299,63 @@ class mgqueue(object):
 		return msg
 
 ########################################################
+## -check
+	def check_queue(self):
+		queue = self.load_queue()
+		nerr = 0
+		ind = 0
+		for task in queue:
+			print( str(ind) + ':' )
+			if( os.access( task['cwd'], os.X_OK ) ):
+				print( ' OK cwd: ' + task['cwd'] )
+			else:
+				print( '*NG*cwd: ' + task['cwd'] )
+				nerr = nerr + 1
+			
+			cmd = [ 'which', task['cmd'][0] ]
+			cwd = task['cwd']
+			try:
+				res = subprocess.run(args=cmd, cwd=cwd, check=True, stdout=subprocess.PIPE )
+				realcmd = res.stdout.decode('utf8').rstrip()
+				print( ' OK cmd: ' + task['cmd'][0] + ' -> ' + realcmd )
+			except:
+				print( '*NG*cmd: ' + task['cmd'][0] )
+				nerr = nerr + 1
+				
+			stdout_file = task['stdout']
+			if( stdout_file[0] != '/' ):
+				stdout_file = cwd + stdout_file
+			try:
+				with open( stdout_file, 'w' ) as f:
+					pass
+				print( ' OK stdout: ' + task['stdout'] )
+			except:
+				print( '*NG*stdout: ' + task['stdout'] )
+				nerr = nerr + 1
+
+			stderr_file = task['stderr']
+			if( stderr_file[0] != '/' ):
+				stderr_file = cwd + stderr_file
+			try:
+				with open( stderr_file, 'w' ) as f:
+					pass
+				print( ' OK stderr: ' + task['stderr'] )
+			except:
+				print( '*NG*stderr: ' + task['stderr'] )
+				nerr = nerr + 1
+			
+			print()
+			
+			ind = ind + 1
+		
+		print()
+		if( nerr == 0 ):
+			print( 'Passed with no error' )
+		else:
+			print( '***** ERROR ****' )
+			print( str(nerr) + ' errors were found.' )
+
+########################################################
 ## -start
 	def daemon_start(self):
 		if( not os.access( self.pkl_file, os.F_OK ) ):
@@ -324,6 +385,8 @@ class mgqueue(object):
 		def daemon_main():
 			logger.info( 'Daemon for ' + self.queue_name + ' is stared.' )
 			queue = self.load_queue()
+			env = os.environ
+
 			while( len(queue) > 0 ):
 				cmd = queue[0]['cmd']
 				cwd = queue[0]['cwd']
@@ -354,10 +417,13 @@ class mgqueue(object):
 
 				logger.info( 'Start ' + ' '.join(cmd) + log_stdout + log_stderr + ' on ' + cwd )
 
-				logger.debug( str(self.env) )
+				logger.debug( str(self.prefix) )
+				
+				if( self.has_prefix() ):
+					cmd = [self.prefix] + cmd
 				
 				try:
-					res = subprocess.run(' '.join(cmd), cwd=cwd, check=True, stdout=stdout, stderr=stderr, env=self.env, shell=True)
+					res = subprocess.run(' '.join(cmd), cwd=cwd, check=True, stdout=stdout, stderr=stderr, env=env, shell=True)
 				except:
 					logger.warning( 'Cannot run ' + ' '.join(cmd) + ' on ' + cwd )
 					self.daemon_stop()
