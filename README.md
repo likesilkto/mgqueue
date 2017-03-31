@@ -24,6 +24,9 @@ mgq (Minimal Gram task Queue)
 + killpg
  + https://getpocket.com/a/read/1646046964
 
++ setup.py script
+ + https://docs.python.jp/3/distutils/setupscript.html
+
 ## License
 
 [MIT](https://github.com/likesilkto/tool/blob/master/LICENSE)
