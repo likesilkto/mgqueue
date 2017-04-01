@@ -69,5 +69,13 @@ background: #EEEEEE;
 }
 
 p {
-padding: 5px;
+padding: 2.5px;
+}
+
+ol, ul {
+padding-left: 17.5px;
+}
+
+h2, h3, h4, h5{
+padding-top: 7.5px;
 }

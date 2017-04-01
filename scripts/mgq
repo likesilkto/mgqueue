@@ -167,7 +167,7 @@ def mv(mgQueue, args):
 parser_mv = subparser.add_parser('mv', help='move task in queue' )
 parser_mv.set_defaults(func=mv)
 parser_mv.add_argument('index', nargs=1, type=int, help='task index')
-parser_mv.add_argument('-c', nargs=1, type=int, default=1, help='down count')
+parser_mv.add_argument('-c', nargs=1, type=int, default=1, help='new index')
 
 ########################################################
 ## switch task

@@ -103,54 +103,39 @@
 </div>
 
 <div id="contents">
-<h2>Overview</h2>
-<p>The mgq (Minimal Gram tasnk Queue) manages background tasks.<br>
-When the current task is finished, the next task will be automatically started.</p>
-<h2>Functionalities</h2>
-<ul>
+<h2>Case: multiple GPUs</h2>
+<p>GPU can accelerate deep-learning. <br>
+The mgq supports multiple queues. Each queue can be associated to GPU.</p>
+<p>In this case, the task queue helps you.</p>
+<h3>Procedure</h3>
+<ol>
 <li>
-<p>Multi-queues</p>
+<p>Set prefix for running with GPUs.</p>
 </li>
 <li>
-<p>Adding task</p>
+<p>Run task0 as background with the GPU0.</p>
 </li>
 <li>
-<p>Remove task</p>
+<p>Run task1 as background with the GPU1.</p>
 </li>
-<li>
-<p>Swith task</p>
-</li>
-</ul>
-<h2>Install</h2>
-<div class="highlight"><pre><span></span>% pip install git+https://github.com/likesilkto/mgqueue
+</ol>
+<h3>mgq command</h3>
+<p>Queue name: thGPU0</p>
+<p>Queue name: thGPU1</p>
+<p>task0: task0.py (theano application)</p>
+<p>task1: task1.py (theano application)</p>
+<div class="highlight"><pre><span></span>% mgq thGPU0 clear
+% mgq thGPU0 prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu0,floatX=float32,&quot;
+% mgq thGPU0 ad &quot;python task0.py&quot;
+% mgq thGPU0 start
 </pre></div>
 
 
-<p>If you use anyenv, restart shell.</p>
-<h2>Getting start</h2>
-<div class="highlight"><pre><span></span>% mgq test ad &quot;echo test&quot; -stdout test.log
-% mgq test -l
-% mgq test start
-% mgq test log
-% cat test.log
+<div class="highlight"><pre><span></span>% mgq thGPU1 clear
+% mgq thGPU1 prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu1,floatX=float32,&quot;
+% mgq thGPU1 ad &quot;python task1.py&quot;
+% mgq thGPU1 start
 </pre></div>
-
-
-<h2>Requirement</h2>
-<ul>
-<li>
-<p>Python 3.6.0 or later</p>
-</li>
-<li>
-<p>mgq makes directory: $HOME/.mgq</p>
-</li>
-</ul>
-<h2>Git repository</h2>
-<p><a href="https://github.com/likesilkto/mgqueue">mgqueue</a></p>
-<h2>Author</h2>
-<p><a href="https://github.com/likesilkto">likesilkto</a></p>
-<h2>License</h2>
-<p><a href="https://github.com/likesilkto/tool/blob/master/LICENSE">MIT</a></p>
 </div>
 
 </div>

@@ -103,54 +103,17 @@
 </div>
 
 <div id="contents">
-<h2>Overview</h2>
-<p>The mgq (Minimal Gram tasnk Queue) manages background tasks.<br>
-When the current task is finished, the next task will be automatically started.</p>
-<h2>Functionalities</h2>
-<ul>
-<li>
-<p>Multi-queues</p>
-</li>
-<li>
-<p>Adding task</p>
-</li>
-<li>
-<p>Remove task</p>
-</li>
-<li>
-<p>Swith task</p>
-</li>
-</ul>
-<h2>Install</h2>
-<div class="highlight"><pre><span></span>% pip install git+https://github.com/likesilkto/mgqueue
+<h2>Set prefix</h2>
+<div class="highlight"><pre><span></span>mgq queue prefix &quot;prefix&quot;
 </pre></div>
 
 
-<p>If you use anyenv, restart shell.</p>
-<h2>Getting start</h2>
-<div class="highlight"><pre><span></span>% mgq test ad &quot;echo test&quot; -stdout test.log
-% mgq test -l
-% mgq test start
-% mgq test log
-% cat test.log
+<p>It sets prefix for the queue.<br>
+The queue should be empty.</p>
+<h3>Example</h3>
+<div class="highlight"><pre><span></span>% mgq queue clear
+% mgq queue prefix prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu0,floatX=float32,&quot;
 </pre></div>
-
-
-<h2>Requirement</h2>
-<ul>
-<li>
-<p>Python 3.6.0 or later</p>
-</li>
-<li>
-<p>mgq makes directory: $HOME/.mgq</p>
-</li>
-</ul>
-<h2>Git repository</h2>
-<p><a href="https://github.com/likesilkto/mgqueue">mgqueue</a></p>
-<h2>Author</h2>
-<p><a href="https://github.com/likesilkto">likesilkto</a></p>
-<h2>License</h2>
-<p><a href="https://github.com/likesilkto/tool/blob/master/LICENSE">MIT</a></p>
 </div>
 
 </div>
