@@ -1,10 +1,9 @@
 mgq (Minimal Gram task Queue)
 ===
 
-## Requirement
-+ Python 3.6.0 or later
-+ mgq makes directory: $HOME/.mgq
+## Document
 
+[Github page](https://likesilkto.github.io/mgqueue/)
 
 ## Reference
 + daemon
