@@ -7,7 +7,7 @@ import os.path
 
 head='''
 <head>
-<title>Like Silk: Just for me</title>
+<title>mgq: Minimal Gram task Queue</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="icon" href="/favicon.ico" >
 <link rel="Shortcut Icon" href="/favicon.ico" >
@@ -24,8 +24,8 @@ head='''
 
 </script>
 
-<meta property="og:title" content="Like Silk"/>
-<meta property="og:description" content="Masayuki Tanaka Personal Site: Fear is often worse than the danger itself. Go for it!"/>
+<meta property="og:title" content="mgq"/>
+<meta property="og:description" content="Minimal Gram task Queue"/>
 <meta property="og:image" content="http://like.silk.to/banner.gif"/>
 <meta property="og:url" content="http://like.silk.to/"/>
 <meta property="og:type" content="university"/>
@@ -36,8 +36,8 @@ head='''
 <meta name="twitter:card" content="summary" />
 <meta name="twitter:site" content="@likesilkto" />
 <meta name="twitter:creator" content="@likesilkto" />
-<meta name="twitter:title" content="Like Silk" />
-<meta name="twitter:description" content="Masayuki Tanaka Personal Site: Fear is often worse than the danger itself. Go for it!" />
+<meta name="twitter:title" content="mgq" />
+<meta name="twitter:description" content="Minimal Gram task Queue" />
 <meta name="twitter:image" content="http://like.silk.to/banner.gif" />
 <meta name="twitter:url" content="http://like.silk.to/" />
 
