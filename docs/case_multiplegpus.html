@@ -113,29 +113,54 @@ The mgq supports multiple queues. Each queue can be associated to GPU.</p>
 <p>Set prefix for running with GPUs.</p>
 </li>
 <li>
-<p>Run task0 as background with the GPU0.</p>
+<p>Run task0 with the GPU0.</p>
 </li>
 <li>
-<p>Run task1 as background with the GPU1.</p>
+<p>Run task1 with the GPU1.</p>
 </li>
 </ol>
 <h3>mgq command</h3>
-<p>Queue name: thGPU0</p>
-<p>Queue name: thGPU1</p>
-<p>task0: task0.py (theano application)</p>
-<p>task1: task1.py (theano application)</p>
-<div class="highlight"><pre><span></span>% mgq thGPU0 clear
-% mgq thGPU0 prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu0,floatX=float32,&quot;
-% mgq thGPU0 ad &quot;python task0.py&quot;
-% mgq thGPU0 start
+<p>Queue name: tf0</p>
+<p>Queue name: tf1</p>
+<p>task0: task0.py </p>
+<p>task1: task1.py </p>
+<p>Initialize the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 clear
+% mgq tf0 prefix &quot;CUDA_VISIBLE_DEVICES=0 &quot;
+% mgq tf1 clear
+% mgq tf1 prefix &quot;CUDA_VISIBLE_DEVICES=1 &quot;
 </pre></div>
 
 
-<div class="highlight"><pre><span></span>% mgq thGPU1 clear
-% mgq thGPU1 prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu1,floatX=float32,&quot;
-% mgq thGPU1 ad &quot;python task1.py&quot;
-% mgq thGPU1 start
+<p>Add tasks to the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 ad &quot;python task0.py paramA&quot;
+% mgq tf0 ad &quot;python task0.py paramB&quot;
+% mgq tf1 ad &quot;python task1.py paramA&quot;
+% mgq tf1 ad &quot;python task1.py paramB&quot;
 </pre></div>
+
+
+<p>Other option to the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% cat mgqadd.sh
+#!/usr/bin/env sh
+mgq tf0 ad &quot;python task0.py paramA&quot;
+mgq tf0 ad &quot;python task0.py paramB&quot;
+mgq tf1 ad &quot;python task1.py paramA&quot;
+mgq tf1 ad &quot;python task1.py paramB&quot;
+% ./mgqadd.sh
+</pre></div>
+
+
+<p>Start the tasks in the queues of tf0 and tf1:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 start
+% mgq tf1 start
+</pre></div>
+
+
+<p>Then, task0.py with paramA and task1.py with paramA are started in parallel.<br>
+task0.py with paramB will be automatically started after task0.py with paramA will finish.<br>
+task1.py with paramB will be automatically started after task1.py with paramA will finish.</p>
+<p>Once you initialized the queue, you just add and start the tasks.</p>
 </div>
 
 </div>

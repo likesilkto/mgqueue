@@ -1,4 +1,4 @@
-## Case: single GPU
+## Case: single GPU with tensorflow
 
 GPU can accelerate deep-learning. 
 You have two tasks, task1 and task2, which take several hours.
@@ -9,29 +9,48 @@ In this case, the task queue helps you.
 
 ### Procedure
 
-1. Set prefix for running with GPU.
+1. Set prefix for running with the specific GPU.
 
-1. Run task1 as background with the mgq.
+1. Add task1 and task2 to the queue.
 
-1. Develope task2.
-
-1. Add task2 to the the queue.
-
-1. When the task1 is finished, the task2 will automatically start.
+1. Start the queue. 
 
 ### mgq command
 
-Queue name: thGPU0
+Queue name: tf0
 
-task1: task1.py (theano application)
+GPU: GPU0
 
-task2: task2.py (theano application)
+task1: task1.py
 
+task2: task2.py
+
+
+Initialize the queue of tf0:
 ```
-% mgq thGPU0 clear
-% mgq thGPU0 prefix "THEANO_FLAGS=mode=FAST_RUN,device=gpu0,floatX=float32,"
-% mgq thGPU0 ad "python task1.py"
-% mgq thGPU0 start
-% mgq thGPU0 ad "python task2.py"
+% mgq tf0 clear
+% mgq tf0 prefix "CUDA_VISIBLE_DEVICES=0 "
 ```
 
+Add tasks to the queue of tf0:
+```
+% mgq tf0 ad "python task1.py"
+% mgq tf0 ad "python task2.py"
+```
+
+Other option to the queue of tf0:
+```
+% cat mgqadd.sh
+#!/usr/bin/env sh
+mgq tf0 ad "python task1.py"
+mgq tf0 ad "python task2.py"
+% ./mgqadd.sh
+```
+
+Start the tasks in the queue of tf0:
+```
+% mgq tf0 start
+```
+Then, task1.py is started and task2.py will be automatically started after task2.py will finish.
+
+Once you initialized the queue, you just add and start the tasks.

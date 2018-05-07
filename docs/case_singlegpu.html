@@ -103,7 +103,7 @@
 </div>
 
 <div id="contents">
-<h2>Case: single GPU</h2>
+<h2>Case: single GPU with tensorflow</h2>
 <p>GPU can accelerate deep-learning. <br>
 You have two tasks, task1 and task2, which take several hours.<br>
 You want to run two tasks sequentially because sequential running is more computationally efficient than parallel running especially computational resource is limited.<br>
@@ -112,31 +112,48 @@ The other advantage of sequential running is that you can develop task2 while ta
 <h3>Procedure</h3>
 <ol>
 <li>
-<p>Set prefix for running with GPU.</p>
+<p>Set prefix for running with the specific GPU.</p>
 </li>
 <li>
-<p>Run task1 as background with the mgq.</p>
+<p>Add task1 and task2 to the queue.</p>
 </li>
 <li>
-<p>Develope task2.</p>
-</li>
-<li>
-<p>Add task2 to the the queue.</p>
-</li>
-<li>
-<p>When the task1 is finished, the task2 will automatically start.</p>
+<p>Start the queue. </p>
 </li>
 </ol>
 <h3>mgq command</h3>
-<p>Queue name: thGPU0</p>
-<p>task1: task1.py (theano application)</p>
-<p>task2: task2.py (theano application)</p>
-<div class="highlight"><pre><span></span>% mgq thGPU0 clear
-% mgq thGPU0 prefix &quot;THEANO_FLAGS=mode=FAST_RUN,device=gpu0,floatX=float32,&quot;
-% mgq thGPU0 ad &quot;python task1.py&quot;
-% mgq thGPU0 start
-% mgq thGPU0 ad &quot;python task2.py&quot;
+<p>Queue name: tf0</p>
+<p>GPU: GPU0</p>
+<p>task1: task1.py</p>
+<p>task2: task2.py</p>
+<p>Initialize the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 clear
+% mgq tf0 prefix &quot;CUDA_VISIBLE_DEVICES=0 &quot;
 </pre></div>
+
+
+<p>Add tasks to the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 ad &quot;python task1.py&quot;
+% mgq tf0 ad &quot;python task2.py&quot;
+</pre></div>
+
+
+<p>Other option to the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% cat mgqadd.sh
+#!/usr/bin/env sh
+mgq tf0 ad &quot;python task1.py&quot;
+mgq tf0 ad &quot;python task2.py&quot;
+% ./mgqadd.sh
+</pre></div>
+
+
+<p>Start the tasks in the queue of tf0:</p>
+<div class="highlight"><pre><span></span>% mgq tf0 start
+</pre></div>
+
+
+<p>Then, task1.py is started and task2.py will be automatically started after task2.py will finish.</p>
+<p>Once you initialized the queue, you just add and start the tasks.</p>
 </div>
 
 </div>
