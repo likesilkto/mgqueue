@@ -31,7 +31,7 @@ except:
 ########################################################
 # global variables
 title = 'mgqueue'
-version = '0.3.0'
+version = '0.3.1'
 
 ########################################################
 # gmail
@@ -511,8 +511,32 @@ class mgqueue(object):
 					res = subprocess.run(' '.join(cmd), cwd=cwd, check=True, stdout=stdout, stderr=stderr, env=env, shell=True)
 				except:
 					logger.warning( 'Cannot run ' + ' '.join(cmd) + ' on ' + cwd )
-					self.daemon_stop()
+					res = None
+					
 				dt1 = dt.now()
+				
+				if( gmail_account != '' and ( res == None or res.returncode != 0 ) ):
+					line = ' '.join(cmd) + '\n' + log_stdout + log_stderr + '\n on ' + cwd
+					subject = '[mgq] ERROR {queue_name} on {hostname}'.format(queue_name=self.queue_name, hostname=hostname)
+					body = '''
+!!!!! ERROR !!!!!
+
+Host:  {hostname}
+Queue: {queue_name}
+
+Command: 
+{line}
+
+Start at {dt0}
+'''.format(hostname=hostname, queue_name=self.queue_name, line=line, dt0=dt0.strftime('%Y/%m/%d  %H:%M:%S') )
+					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body ) ):
+						logger.info( 'Sent error email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
+					else:
+						logger.info( 'ERROR error email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
+
+					
+				if( res == None ):
+					self.daemon_stop()
 				
 				if( stdout != None ):
 					stdout.close()
@@ -536,13 +560,15 @@ class mgqueue(object):
 					s = ts%60
 					elapse = '{h:d}:{m:02d}:{s:02d}'.format(h=h,m=m,s=s)
 					
-					line = ' '.join(cmd) + log_stdout + log_stderr + ' on ' + cwd
+					line = ' '.join(cmd) + '\n' + log_stdout + log_stderr + '\n on ' + cwd
 					subject = '[mgq] {queue_name} on {hostname}'.format(queue_name=self.queue_name, hostname=hostname)
 					body = '''
-Hostname: {hostname}
+Host:  {hostname}
 Queue: {queue_name}
 
-Command: {line}
+Command: 
+{line}
+
 Start at {dt0}
 End   at {dt1}
 Elapse time: {elapse}
@@ -550,10 +576,10 @@ Elapse time: {elapse}
 Rest of tasks: {nb_tasks}
 '''.format(hostname=hostname, queue_name=self.queue_name, line=line, dt0=dt0.strftime('%Y/%m/%d  %H:%M:%S'), dt1=dt1.strftime('%Y/%m/%d  %H:%M:%S'), elapse=elapse, nb_tasks = len(queue) )
 
-					if( gmail_send( gmail_account+'@gmail.com', password, account+'+mgq@gmail.com', subject=subject, body=body ) ):
-						logger.info( 'Sent email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=account) )
+					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body ) ):
+						logger.info( 'Sent email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
 					else:
-						logger.info( 'ERROR email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=account) ) 
+						logger.info( 'ERROR email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) ) 
 						
 			self.del_pkl_file()
 			logger.info( 'Daemon for ' + self.queue_name + ' is ended.' )
