@@ -4,6 +4,7 @@
 import sys
 import subprocess
 import argparse
+from getpass import getpass
 
 from mgqueue import mgqueue
 
@@ -56,14 +57,24 @@ parser_check.set_defaults(func=check)
 ########################################################
 ## start daemon
 def start(mgQueue, args):
+	gmail_account = args.gmail[0]
+	password = args.password[0]
+	
+	if( gmail_account != '' ):
+		if( password == '' ):
+			password = getpass( 'password for {account}@gmail.com: '.format(account=gmail_account) )
+
 	print( 'Daemon for ' + args.queue + ' is starting.' )
+	
 	try:
-		mgQueue.daemon_start()
+		mgQueue.daemon_start(gmail_account=gmail_account, password=password)
 	except ValueError as msg:
 		print('***** ERROR *****')
 		print(msg)
 parser_start = subparser.add_parser('start', help='start daemon for queue')
 parser_start.set_defaults(func=start)
+parser_start.add_argument('-gmail', nargs=1, default=[''], help='account name for gmail,  [GMAIL]@gmail.com')
+parser_start.add_argument('-password',  nargs=1, default=[''], help='password for gmail,  [GMAIL]@gmail.com (NOT RECOMENDED)')
 
 ########################################################
 ## stop daemon

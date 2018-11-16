@@ -13,6 +13,13 @@ import subprocess
 import signal
 import logging
 
+from datetime import datetime as dt
+
+import smtplib
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from getpass import getpass
+
 from daemonize import Daemonize
 import psutil
 
@@ -24,7 +31,45 @@ except:
 ########################################################
 # global variables
 title = 'mgqueue'
-version = '0.2.0'
+version = '0.3.0'
+
+########################################################
+# gmail
+def create_message(from_addr, to_addrs, cc_addrs='', bcc_addrs='', subject='', body=''):
+	msg = MIMEText(body)
+	msg['Subject'] = subject
+	msg['From'] = from_addr
+	msg['To'] = to_addrs
+	msg['Cc'] = cc_addrs
+	msg['Bcc'] = bcc_addrs
+	msg['Date'] = formatdate()
+	return msg
+    
+def gmail_check(account, password):
+	try:
+		server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		server.ehlo()
+		server.login(account, password)
+		server.close()
+	except:
+		return False
+	
+	return True
+
+def gmail_send(account, password, to_addrs, cc_addrs='', bcc_addrs='', subject='', body=''):
+	try:
+		msg = create_message(from_addr=account, to_addrs=to_addrs, cc_addrs=cc_addrs, bcc_addrs=bcc_addrs, subject=subject, body=body)
+		
+		server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+		server.ehlo()
+		server.login(account, password)
+		server.sendmail(account, to_addrs, msg.as_string())
+		server.close()
+	except:
+		return False
+	
+	return True
+
 
 ########################################################
 # utilities
@@ -390,7 +435,7 @@ class mgqueue(object):
 
 ########################################################
 ## -start
-	def daemon_start(self):
+	def daemon_start(self, gmail_account='', password=''):
 		if( not os.access( self.pkl_file, os.F_OK ) ):
 			msg = 'Cannot find queue: ' + self.queue_name
 			raise ValueError(msg)
@@ -399,6 +444,12 @@ class mgqueue(object):
 			msg = 'Daemon for ' + self.queue_name + ' is already running.'
 			raise ValueError(msg)
 
+		if( gmail_account != '' ):
+			if( not gmail_check( gmail_account+'@gmail.com', password ) ):
+				msg = 'password for {account}@gmail.com was not matched.'.format(account=gmail_account)
+				raise ValueError(msg)
+
+		hostname = os.uname()[1]
 
 ########################################################
 ### logger setting
@@ -455,11 +506,13 @@ class mgqueue(object):
 				if( self.has_prefix() ):
 					cmd = [self.prefix] + cmd
 				
+				dt0 = dt.now()
 				try:
 					res = subprocess.run(' '.join(cmd), cwd=cwd, check=True, stdout=stdout, stderr=stderr, env=env, shell=True)
 				except:
 					logger.warning( 'Cannot run ' + ' '.join(cmd) + ' on ' + cwd )
 					self.daemon_stop()
+				dt1 = dt.now()
 				
 				if( stdout != None ):
 					stdout.close()
@@ -475,7 +528,33 @@ class mgqueue(object):
 				self.unlock(fd)
 
 				logger.info( 'Ended ' + ' '.join(cmd) + log_stdout + log_stderr + ' on ' + cwd )
+				
+				if( gmail_account != '' ):
+					ts = int((dt1-dt0).total_seconds())
+					h = ts//3600
+					m = (ts%3600)//60
+					s = ts%60
+					elapse = '{h:d}:{m:02d}:{s:02d}'.format(h=h,m=m,s=s)
+					
+					line = ' '.join(cmd) + log_stdout + log_stderr + ' on ' + cwd
+					subject = '[mgq] {queue_name} on {hostname}'.format(queue_name=self.queue_name, hostname=hostname)
+					body = '''
+Hostname: {hostname}
+Queue: {queue_name}
 
+Command: {line}
+Start at {dt0}
+End   at {dt1}
+Elapse time: {elapse}
+
+Rest of tasks: {nb_tasks}
+'''.format(hostname=hostname, queue_name=self.queue_name, line=line, dt0=dt0.strftime('%Y/%m/%d  %H:%M:%S'), dt1=dt1.strftime('%Y/%m/%d  %H:%M:%S'), elapse=elapse, nb_tasks = len(queue) )
+
+					if( gmail_send( gmail_account+'@gmail.com', password, account+'+mgq@gmail.com', subject=subject, body=body ) ):
+						logger.info( 'Sent email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=account) )
+					else:
+						logger.info( 'ERROR email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=account) ) 
+						
 			self.del_pkl_file()
 			logger.info( 'Daemon for ' + self.queue_name + ' is ended.' )
 		
@@ -536,3 +615,4 @@ class mgqueue(object):
 if( __name__ == '__main__' ):
 	ls_queue()
 	test = mgqueue('test')
+
