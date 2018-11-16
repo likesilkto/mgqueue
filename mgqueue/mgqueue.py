@@ -12,6 +12,7 @@ import fcntl
 import subprocess
 import signal
 import logging
+import traceback
 
 from datetime import datetime as dt
 
@@ -31,7 +32,7 @@ except:
 ########################################################
 # global variables
 title = 'mgqueue'
-version = '0.3.1'
+version = '0.3.2'
 
 ########################################################
 # gmail
@@ -51,7 +52,9 @@ def gmail_check(account, password):
 		server.ehlo()
 		server.login(account, password)
 		server.close()
-	except:
+	except Exception as e:
+		print( '***** ERROR GMAIL: {account} *****'.format(account=account), file=sys.stderr )
+		print(e, file=sys.stderr )
 		return False
 	
 	return True
@@ -65,7 +68,9 @@ def gmail_send(account, password, to_addrs, cc_addrs='', bcc_addrs='', subject='
 		server.login(account, password)
 		server.sendmail(account, to_addrs, msg.as_string())
 		server.close()
-	except:
+	except Exception as e:
+		print( '***** ERROR GMAIL: {account} *****'.format(account=account), file=sys.stderr )
+		print(e, file=sys.stderr )
 		return False
 	
 	return True
@@ -446,8 +451,7 @@ class mgqueue(object):
 
 		if( gmail_account != '' ):
 			if( not gmail_check( gmail_account+'@gmail.com', password ) ):
-				msg = 'password for {account}@gmail.com was not matched.'.format(account=gmail_account)
-				raise ValueError(msg)
+				raise ValueError('')
 
 		hostname = os.uname()[1]
 
