@@ -12,7 +12,9 @@ import fcntl
 import subprocess
 import signal
 import logging
+
 from daemonize import Daemonize
+import psutil
 
 try:
 	import cPickle as pickle
@@ -22,7 +24,7 @@ except:
 ########################################################
 # global variables
 title = 'mgqueue'
-version = '0.1.0'
+version = '0.2.0'
 
 ########################################################
 # utilities
@@ -30,26 +32,52 @@ def defulat_queue_dir():
 	home = os.path.expanduser('~') # $HOME/
 	return home + '/.' + title + '/'
 
+def check_pid_file(pid_file):
+	try:
+		with open( pid_file, 'r' ) as fin:
+			pid = int(fin.read())
+	except:
+		return False
+	
+	if( not psutil.pid_exists(pid) ):
+		os.remove( pid_file )
+		return False
+	return True
+
 def get_runs(queue_dir = None):
 	if( queue_dir == None ):
 		queue_dir = defulat_queue_dir()
 	pids = glob.glob( queue_dir + '*.pid' )
-	return [os.path.splitext(os.path.basename(f))[0] for f in pids]
+	
+	runs = []
+	for pid in pids:
+		if( check_pid_file(pid) ):
+			runs.append(os.path.splitext(os.path.basename(pid))[0])
+	return runs
 
 def ls_queue(queue_dir = None):
 	if( queue_dir == None ):
 		queue_dir = defulat_queue_dir()
 	runs = get_runs( queue_dir )
 	pkl = glob.glob( queue_dir + '*.pkl' )
+	pkl.sort()
 	for file in pkl:
 		with open(file, 'rb') as fin:
 			queue, prefix = pickle.load( fin )
-		queue_name = os.path.splitext(os.path.basename(file))[0] + ' '
+		queue_name = os.path.splitext(os.path.basename(file))[0]
+		
+		mark = ' '
 		if( prefix != None ):
-			queue_name = queue_name + '+'
+			mark += '+'
+		else:
+			mark += ' '
+
 		if( queue_name in runs ):
-			queue_name = queue_name + '*'
-		print( queue_name + ' : ' + str(len(queue)) )
+			mark += '*'
+		else:
+			mark += ' '
+
+		print( queue_name + mark + ' : ' + str(len(queue)) )
 
 
 ########################################################
@@ -95,6 +123,7 @@ class mgqueue(object):
 		return self.prefix != None
 
 	def is_run(self): #test_is_run
+		self.check_pid_file()
 		return os.access( self.pid_file, os.F_OK )
 	
 	def _load_queue_prefix(self):
@@ -132,10 +161,14 @@ class mgqueue(object):
 		if( self.prefix == None ):
 			os.remove( self.pkl_file )
 
+	def check_pid_file(self):
+		return check_pid_file(self.pid_file)
+
 
 ########################################################
 ## -ls
 	def ls_task(self):
+		self.check_pid_file()
 		queue = self.load_queue()
 		
 		if( self.has_prefix() ):
@@ -473,7 +506,7 @@ class mgqueue(object):
 		if( os.path.exists(self.pid_file) ):
 			os.remove( self.pid_file )
 		
-		return 'Daemon for ' + self.queue_name + ' is stoped.'
+		return 'Daemon for ' + self.queue_name + ' is stopped.'
 
 
 ########################################################
