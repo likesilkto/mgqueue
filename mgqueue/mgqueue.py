@@ -17,8 +17,12 @@ import traceback
 from datetime import datetime as dt
 
 import smtplib
+from email import encoders, utils
+from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
-from email.utils import formatdate
+from email.mime.multipart import MIMEMultipart
+import mimetypes
+
 from getpass import getpass
 
 from daemonize import Daemonize
@@ -32,20 +36,92 @@ except:
 ########################################################
 # global variables
 title = 'mgqueue'
-version = '0.3.2'
+version = '0.3.3'
 
 ########################################################
 # gmail
-def create_message(from_addr, to_addrs, cc_addrs='', bcc_addrs='', subject='', body=''):
-	msg = MIMEText(body)
+def mail_attachment(filename):
+	fd = open(filename, 'rb')
+	mimetype, mimeencoding = mimetypes.guess_type(filename)
+	if( mimeencoding or (mimetype is None) ):
+		mimetype = 'application/octet-stream'
+	
+	maintype, subtype = mimetype.split('/')
+	if( maintype == 'text' ):
+		retval = MIMEText(fd.read(), _subtype=subtype)
+	else:
+		retval = MIMEBase(maintype, subtype)
+		retval.set_payload(fd.read())
+		encoders.encode_base64(retval)
+		retval.add_header('Content-Disposition', 'attachment', filename=os.path.basename(filename) )
+	fd.close()
+	return retval	
+
+def create_message(from_addr, to_addrs, cc_addrs='', bcc_addrs='', subject='', body='', attached_file=None):
+	if( attached_file == None ):
+		msg = MIMEText(body)
+	else:
+		msg = MIMEMultipart()
+		body = MIMEText(body, _subtype='plain')
+		msg.attach(body)
+		msg.attach(mail_attachment(attached_file))
+	
 	msg['Subject'] = subject
 	msg['From'] = from_addr
 	msg['To'] = to_addrs
 	msg['Cc'] = cc_addrs
 	msg['Bcc'] = bcc_addrs
-	msg['Date'] = formatdate()
+	msg['Date'] = utils.formatdate(localtime=True)
+	msg['Message-ID'] = utils.make_msgid()
+
 	return msg
-    
+
+
+def create_sub_body(msg, queue_name, command, dt_start=None, dt_end=None, nb_tasks='', info='' ):
+	hostname = os.uname()[1]
+
+	subject = '[mgq] {msg} {nb_tasks} {queue_name} on {hostname}'.format(msg=msg, nb_tasks=nb_tasks, queue_name=queue_name, hostname=hostname)
+	
+	body = ''
+	
+	if( msg == 'ERR' ):
+		body += '!!!!! ERROR !!!!!\n'
+	
+	body += '''
+Host:  {hostname}
+Queue: {queue_name}
+
+Command: 
+{command}
+
+'''.format(hostname=hostname, queue_name=queue_name, command=command)
+
+	if( dt_start != None ):
+		body += 'Start at {dt}\n'.format( dt=dt_start.strftime('%Y/%m/%d  %H:%M:%S') )
+	if( dt_end != None ):
+		body += 'End   at {dt}\n'.format( dt=dt_end.strftime('%Y/%m/%d  %H:%M:%S') )
+
+	if( dt_start != None and dt_end != None ):
+		ts = int((dt_end-dt_start).total_seconds())
+		h = ts//3600
+		m = (ts%3600)//60
+		s = ts%60
+		elapse = '{h:d}:{m:02d}:{s:02d}'.format(h=h,m=m,s=s)
+		body += 'Elapse time: {elapse}\n'.format( elapse=elapse )
+
+	body += info
+	
+	body += '''
+--
+mgq 
+m@like.silk.to
+https://github.com/likesilkto/mgqueue
+'''
+
+	return subject, body
+
+
+
 def gmail_check(account, password):
 	try:
 		server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
@@ -59,9 +135,9 @@ def gmail_check(account, password):
 	
 	return True
 
-def gmail_send(account, password, to_addrs, cc_addrs='', bcc_addrs='', subject='', body=''):
+def gmail_send(account, password, to_addrs, cc_addrs='', bcc_addrs='', subject='', body='', attached_file=None):
 	try:
-		msg = create_message(from_addr=account, to_addrs=to_addrs, cc_addrs=cc_addrs, bcc_addrs=bcc_addrs, subject=subject, body=body)
+		msg = create_message(from_addr=account, to_addrs=to_addrs, cc_addrs=cc_addrs, bcc_addrs=bcc_addrs, subject=subject, body=body, attached_file=attached_file)
 		
 		server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
 		server.ehlo()
@@ -105,12 +181,13 @@ def get_runs(queue_dir = None):
 			runs.append(os.path.splitext(os.path.basename(pid))[0])
 	return runs
 
-def ls_queue(queue_dir = None):
+def ls_queue_str(queue_dir = None):
 	if( queue_dir == None ):
 		queue_dir = defulat_queue_dir()
 	runs = get_runs( queue_dir )
 	pkl = glob.glob( queue_dir + '*.pkl' )
 	pkl.sort()
+	ret = ''
 	for file in pkl:
 		with open(file, 'rb') as fin:
 			queue, prefix = pickle.load( fin )
@@ -127,8 +204,11 @@ def ls_queue(queue_dir = None):
 		else:
 			mark += ' '
 
-		print( queue_name + mark + ' : ' + str(len(queue)) )
+		ret += queue_name + mark + ' : ' + str(len(queue)) + '\n'
+	return ret
 
+def ls_queue(queue_dir = None):
+	print( ls_queue_str(queue_dir), end='' )
 
 ########################################################
 # class
@@ -217,7 +297,8 @@ class mgqueue(object):
 
 ########################################################
 ## -ls
-	def ls_task(self):
+	def ls_task_str(self):
+		ret = ''
 		self.check_pid_file()
 		queue = self.load_queue()
 		
@@ -249,9 +330,13 @@ class mgqueue(object):
 				except:
 					pass
 
-				print(line)
-				print( '     ' + queue[i]['cwd'] )
+				ret += line + '\n'
+				ret += '     ' + queue[i]['cwd'] + '\n'
 				
+		return ret
+
+	def ls_task(self):
+		print( self.ls_task_str(), end='' )
 
 
 ########################################################
@@ -453,8 +538,6 @@ class mgqueue(object):
 			if( not gmail_check( gmail_account+'@gmail.com', password ) ):
 				raise ValueError('')
 
-		hostname = os.uname()[1]
-
 ########################################################
 ### logger setting
 		logger = logging.getLogger(title+'_'+self.queue_name)
@@ -519,25 +602,22 @@ class mgqueue(object):
 					
 				dt1 = dt.now()
 				
+				if( gmail_account != '' ):
+					command = ' '.join(cmd) + '\n' + log_stdout + log_stderr + '\n on ' + cwd
+					info = '\n---\n{ls_task}---\n{ls_queue}'.format( ls_task=self.ls_task_str(), ls_queue=ls_queue_str() )
+					
+				else:
+					command = ''
+					info = ''
+				
 				if( gmail_account != '' and ( res == None or res.returncode != 0 ) ):
-					line = ' '.join(cmd) + '\n' + log_stdout + log_stderr + '\n on ' + cwd
-					subject = '[mgq] ERROR {queue_name} on {hostname}'.format(queue_name=self.queue_name, hostname=hostname)
-					body = '''
-!!!!! ERROR !!!!!
-
-Host:  {hostname}
-Queue: {queue_name}
-
-Command: 
-{line}
-
-Start at {dt0}
-'''.format(hostname=hostname, queue_name=self.queue_name, line=line, dt0=dt0.strftime('%Y/%m/%d  %H:%M:%S') )
-					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body ) ):
-						logger.info( 'Sent error email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
+					logger.handlers[0].flush()
+					subject, body = create_sub_body(msg='ERR', queue_name=self.queue_name, command = command, dt_start=dt0, info=info )
+					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body, attached_file=self.log_file ) ):
+						log_msg = 'Sent'
 					else:
-						logger.info( 'ERROR error email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
-
+						log_msg = 'FAIL'
+					logger.info( '{log_msg} error email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(log_msg=log_msg, account=gmail_account) )
 					
 				if( res == None ):
 					self.daemon_stop()
@@ -558,32 +638,13 @@ Start at {dt0}
 				logger.info( 'Ended ' + ' '.join(cmd) + log_stdout + log_stderr + ' on ' + cwd )
 				
 				if( gmail_account != '' ):
-					ts = int((dt1-dt0).total_seconds())
-					h = ts//3600
-					m = (ts%3600)//60
-					s = ts%60
-					elapse = '{h:d}:{m:02d}:{s:02d}'.format(h=h,m=m,s=s)
-					
-					line = ' '.join(cmd) + '\n' + log_stdout + log_stderr + '\n on ' + cwd
-					subject = '[mgq] {queue_name} on {hostname}'.format(queue_name=self.queue_name, hostname=hostname)
-					body = '''
-Host:  {hostname}
-Queue: {queue_name}
-
-Command: 
-{line}
-
-Start at {dt0}
-End   at {dt1}
-Elapse time: {elapse}
-
-Rest of tasks: {nb_tasks}
-'''.format(hostname=hostname, queue_name=self.queue_name, line=line, dt0=dt0.strftime('%Y/%m/%d  %H:%M:%S'), dt1=dt1.strftime('%Y/%m/%d  %H:%M:%S'), elapse=elapse, nb_tasks = len(queue) )
-
-					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body ) ):
-						logger.info( 'Sent email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) )
+					logger.handlers[0].flush()
+					subject, body = create_sub_body(msg='FIN', queue_name=self.queue_name, command = command, dt_start=dt0, dt_end=dt1, nb_tasks=len(queue), info=info )
+					if( gmail_send( gmail_account+'@gmail.com', password, gmail_account+'+mgq@gmail.com', subject=subject, body=body, attached_file=self.log_file ) ):
+						log_msg = 'Sent'
 					else:
-						logger.info( 'ERROR email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(account=gmail_account) ) 
+						log_msg = 'FAIL'
+					logger.info( '{log_msg} finish email from {account}@gmail.com to {account}+mgq@gmail.com.'.format(log_msg=log_msg, account=gmail_account) )
 						
 			self.del_pkl_file()
 			logger.info( 'Daemon for ' + self.queue_name + ' is ended.' )
