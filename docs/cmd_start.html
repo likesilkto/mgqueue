@@ -104,7 +104,7 @@
 
 <div id="contents">
 <h2>Start</h2>
-<div class="highlight"><pre><span></span>mgq queue start
+<div class="highlight"><pre><span></span>mgq queue start [-gmail GMAIL ] 
 </pre></div>
 
 
@@ -112,6 +112,17 @@
 <h3>Example</h3>
 <div class="highlight"><pre><span></span>% mgq queue start
 </pre></div>
+
+
+<h3>Example mail</h3>
+<div class="highlight"><pre><span></span>% mgq queue start -gmail GMAIL
+</pre></div>
+
+
+<p>Plese give the password for the <a href="mailto:GMAIL@gmail.com">GMAIL@gmail.com</a>.<br>
+Then, when the task finish, the mail will be sent from <a href="mailto:GMAIL@gmail.com">GMAIL@gmail.com</a> to <a href="mailto:GMAIL+mgq@gmail.com">GMAIL+mgq@gmail.com</a>.</p>
+<p>you'll need to configure "less" secure method to use this functionality.</p>
+<p><a href="https://stackabuse.com/how-to-send-emails-with-gmail-using-python/">Reference to send the gmail with python.</a></p>
 </div>
 
 </div>

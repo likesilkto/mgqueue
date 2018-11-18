@@ -128,7 +128,8 @@ When the current task is finished, the next task will be automatically started.<
 
 <p>If you use anyenv, restart shell.</p>
 <h2>Getting start</h2>
-<div class="highlight"><pre><span></span>% mgq test ad &quot;echo test&quot; -stdout test.log
+<div class="highlight"><pre><span></span>% pip install git+https://github.com/likesilkto/mgqueue
+% mgq test ad &quot;echo test&quot; -stdout test.log
 % mgq test -l
 % mgq test start
 % mgq test log
@@ -136,6 +137,13 @@ When the current task is finished, the next task will be automatically started.<
 </pre></div>
 
 
+<p>Or with gmail option.</p>
+<div class="highlight"><pre><span></span>% mgq test -l ad &quot;echo test&quot; -stdout test.log
+% mgq test start -gmail likesilkto
+</pre></div>
+
+
+<p>The mgq will send gmail to <a href="mailto:likesilkto@gmail.com">likesilkto@gmail.com</a> when the task finished.</p>
 <h2>Requirement</h2>
 <ul>
 <li>

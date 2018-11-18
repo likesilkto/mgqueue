@@ -36,3 +36,101 @@ task2: task2.sh
 % mgq CPU ad task2.sh
 ```
 
+### Example
+
+You have several training python codes like deep learning. In this example, the account name is _likesilkto_.
+
+#### 1. Clear the task queue of CPU.
+
+```
+% mgq CPU rmall
+```
+
+#### 2. Register task train_mnist.py in ~/mnist to the CPU queque.
+
+```
+% cd ~/mnist
+
+% mgq CPU as 'python train_mnist.py'
+Added python train_mnist.py to CPU
+
+% mgq CPU
+ 0 : python train_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+```
+
+#### 3. Register task train_cifar.py in ~/cifar to the CPU queque.
+
+```
+% cd ~/cifar
+
+% mgq CPU ad 'python train_cifar.py' -stdout train_cifar.log
+Added python train_cifar.py to CPU
+
+% mgq CPU
+ 0 : python train_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+ 1 : python train_cifar.py > train_cifar.log 2> /dev/null
+     /home/mtanaka/tmp/cifar/
+```
+
+#### 4. Start tasks.
+
+```
+% mgq CPU start
+Daemon for CPU is starting.
+```
+
+Or with gmail option.
+
+```
+% mgq CPU start -gmail likesilkto
+password for likesilkto@gmail.com:
+Daemon for CPU is starting.
+```
+Please provide the password for gmail.
+If you start with gmail option, you will receive the gmail when the task finish.
+
+#### 5. Check status
+
+```
+% mgq CPU log
+YYYY-MM-DD hh:mm:ss,???:WARNING:Starting daemon.
+YYYY-MM-DD hh:mm:ss,???:INFO:Daemon for CPU is stared.
+YYYY-MM-DD hh:mm:ss,???:INFO:Start python train_mnist.py > /dev/null 2> /dev/null on /home/likesilkto/mnist/
+
+% mgq CPU
+ * : python train_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+ 1 : python train_cifar.py > train_cifar.log 2> /dev/null
+     /home/mtanaka/tmp/cifar/
+```
+
+#### 6. Add tasks
+
+```
+% cd ~/mnist
+% mgq CPU -l ad 'python train_fashion_mnist.py'
+ * : python train_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+ 1 : python train_cifar.py > train_cifar.log 2> /dev/null
+     /home/mtanaka/tmp/cifar/
+ 2 : python train_fashion_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+```
+
+#### 7. Stop tasks
+If you want to stop the task,
+```
+% mgq CPU stop
+Daemon for CPU is stopped.
+
+% mgq CPU -l
+ 0 : python train_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+ 1 : python train_cifar.py > train_cifar.log 2> /dev/null
+     /home/mtanaka/tmp/cifar/
+ 2 : python train_fashion_mnist.py > /dev/null 2> /dev/null
+     /home/likesilkto/mnist/
+```
+
