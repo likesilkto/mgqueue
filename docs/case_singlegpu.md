@@ -51,7 +51,7 @@ Start the tasks in the queue of tf0:
 ```
 % mgq tf0 start
 ```
-Then, task1.py is started and task2.py will be automatically started after task2.py will finish.
+Then, task1.py is started and task2.py will be automatically started after task2.py will be finished.
 
 Once you initialized the queue, you just add and start the tasks.
 
@@ -108,7 +108,7 @@ password for likesilkto@gmail.com:
 Daemon for tf0 is starting.
 ```
 Please provide the password for gmail.
-If you start with gmail option, you will receive the gmail when the task finish.
+If you start with gmail option, you will receive the gmail when the task is finished.
 
 #### 5. Check status
 

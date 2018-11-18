@@ -89,7 +89,7 @@ password for likesilkto@gmail.com:
 Daemon for CPU is starting.
 ```
 Please provide the password for gmail.
-If you start with gmail option, you will receive the gmail when the task finish.
+If you start with gmail option, you will receive the gmail when the task is finished.
 
 #### 5. Check status
 

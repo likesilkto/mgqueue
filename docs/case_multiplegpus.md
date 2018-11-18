@@ -58,8 +58,8 @@ Start the tasks in the queues of tf0 and tf1:
 ```
 
 Then, task0.py with paramA and task1.py with paramA are started in parallel.
-task0.py with paramB will be automatically started after task0.py with paramA will finish.
-task1.py with paramB will be automatically started after task1.py with paramA will finish.
+task0.py with paramB will be automatically started after task0.py with paramA will be finished.
+task1.py with paramB will be automatically started after task1.py with paramA will be finished.
 
 Once you initialized the queue, you just add and start the tasks.
 
@@ -172,7 +172,7 @@ tf0 +* : 2
 tf1 +* : 2
 ```
 Please provide the password for gmail.
-If you start with gmail option, you will receive the gmail when the task finish.
+If you start with gmail option, you will receive the gmail when the task is finished.
 
 #### 5. Check status
 
