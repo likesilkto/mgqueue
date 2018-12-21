@@ -3,11 +3,9 @@
 
 from setuptools import setup, find_packages
 
-from mgqueue import mgqueue
-
 setup(
-	name= mgqueue.title, # Application name:
-	version= mgqueue.version, # Version number
+	name= 'mgqueue', # Application name:
+	version= '0.3.3', # Version number
 
 	author= 'Masayuki Tanaka', # Author name
 	author_email= 'm@like.silk.to', # Author mail	
