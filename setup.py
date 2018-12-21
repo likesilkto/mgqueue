@@ -16,7 +16,7 @@ setup(
 	description='Simple task queue.', # short description
 	long_description='https://likesilkto.github.io/mgqueue', # long description
 	install_requires=[ # Dependent packages (distributions)
-		'Daemonize', 'psutil'
+		'daemonize', 'psutil'
 	],
 	
 	include_package_data=False, # Include additional files into the package
